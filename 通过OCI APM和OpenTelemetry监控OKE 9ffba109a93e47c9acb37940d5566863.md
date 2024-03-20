@@ -35,7 +35,38 @@ NAME        STATUS     ROLES   AGE     VERSION
 ```
 ## **1.3 Helm安装**
 
-我们需要通过helm来安装OpenTelemetry（[helm安装地址](https://helm.sh/docs/intro/install/)）
+我们需要通过helm来安装OpenTelemetry（[helm安装地址](https://helm.sh/docs/intro/install/)），以Oracle-Linux 8-AMD为例
+
+```shell
+[root@instance-20231020-1341 opc]# wget https://get.helm.sh/helm-v3.14.3-linux-amd64.tar.gz
+--2024-03-20 06:50:48--  https://get.helm.sh/helm-v3.14.3-linux-amd64.tar.gz
+Resolving get.helm.sh (get.helm.sh)... 152.195.19.97, 2606:2800:11f:1cb7:261b:1f9c:2074:3c
+Connecting to get.helm.sh (get.helm.sh)|152.195.19.97|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 16134525 (15M) [application/x-tar]
+Saving to: ‘helm-v3.14.3-linux-amd64.tar.gz’
+
+helm-v3.14.3-linux-amd64.tar.gz            100%[=======================================================================================>]  15.39M  80.8MB/s    in 0.2s    
+
+2024-03-20 06:50:48 (80.8 MB/s) - ‘helm-v3.14.3-linux-amd64.tar.gz’ saved [16134525/16134525]
+
+[root@instance-20231020-1341 opc]# tar -zxvf helm-v3.14.3-linux-amd64.tar.gz 
+linux-amd64/
+linux-amd64/LICENSE
+linux-amd64/README.md
+linux-amd64/helm
+[root@instance-20231020-1341 opc]# mv linux-amd64/helm /usr/bin
+[root@instance-20231020-1341 opc]# helm
+The Kubernetes package manager
+
+Common actions for Helm:
+
+- helm search:    search for charts
+- helm pull:      download a chart to your local directory to view
+- helm install:   upload the chart to Kubernetes
+- helm list:      list releases of charts
+
+```
 
 假设您已经安装了 Helm，请添加 OpenTelemetry Collector Helm charts，以便稍后使用。
 
@@ -255,12 +286,14 @@ golang-demo-lb LoadBalancer 10.96.24.160 150.230.161.35   80:32344/TCP   10m
 ***集中观测***：
 
 目前metrics和traces数据分别在Monitoring和APM两个服务中查看，为了方便统一监控，可以在APM的Dashboards中自定义监控大盘数据。
-如下图所示，选择Create Dashboard，选择Widgets并新增
+如下图所示，选择Create Dashboard.
+
 ![alt text](image-16.png)
+选择Widgets并新增.
 
-
-点击"+"，添加数据，并在Namespace中选择oracle-apm-monitoring
 ![alt text](image-17.png)
+点击"+"，添加数据，并在Namespace中选择oracle-apm-monitoring。
+
 ![alt text](image-18.png)
 
 ![alt text](image-19.png)
@@ -271,8 +304,13 @@ golang-demo-lb LoadBalancer 10.96.24.160 150.230.161.35   80:32344/TCP   10m
 
 添加traces数据可重复上述步骤，并在APM Widgets中选择对应的选项，如下图所示
 
-可以在同一个界面显示metrics和traces数据
+
 ![alt text](image-21.png)
+
+这样就可以在同一个界面显示metrics和traces数据了。
+如下图所示，在这里我们可以看到container的metrics，
+也可以看到应用的tracers信息
+
 ![alt text](image-22.png)
 
 
