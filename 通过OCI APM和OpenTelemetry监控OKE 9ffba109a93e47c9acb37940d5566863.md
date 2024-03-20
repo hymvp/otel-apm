@@ -323,7 +323,7 @@ golang-demo-lb LoadBalancer 10.96.24.160 150.230.161.35   80:32344/TCP   10m
 
 
 
-## **1.6 logs收集**
+## **1.6 Logs收集**
 
 本文主要讲解metrics和traces的收集，logs收集详见[OCI Logging服务](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#3logging)。
 
