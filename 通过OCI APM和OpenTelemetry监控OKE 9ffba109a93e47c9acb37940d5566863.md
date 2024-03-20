@@ -68,7 +68,7 @@ Common actions for Helm:
 
 ```
 
-假设您已经安装了 Helm，请添加 OpenTelemetry Collector Helm charts，以便稍后使用。
+如果您已经安装了 Helm，请添加 OpenTelemetry Collector Helm charts，以便稍后使用。
 
 
 ```shell
