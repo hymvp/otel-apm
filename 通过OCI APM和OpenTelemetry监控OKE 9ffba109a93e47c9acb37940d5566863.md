@@ -94,10 +94,10 @@ config:
 
 
 <div style="background-color: #ADD8E6; padding: 10px;">
-配置文件中的endpoint地址和Authorization中的私钥替换成客户真实的信息。
-Authorization是由 dataKey + 私钥的格式组成。
+1、配置文件中的endpoint地址和Authorization中的私钥替换成客户真实的信息。
 
-endpoint和私钥地址获取详见：[获取方法](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#2-3-apm%E3%83%89%E3%83%A1%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90)
+2、Authorization是由 dataKey + 私钥的格式组成。
+3、endpoint和私钥地址获取详见：[获取方法](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#2-3-apm%E3%83%89%E3%83%A1%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90)
 </div>
 
 安装命令：
@@ -155,12 +155,11 @@ config:
 ```
 
 <div style="background-color: #ADD8E6; padding: 10px;">
-配置文件中的endpoint地址和Authorization中的私钥替换成客户真实的信息。
-Authorization是由 dataKey + 私钥的格式组成。
+1、配置文件中的endpoint地址和Authorization中的私钥替换成客户真实的信息。
 
-endpoint和私钥地址获取详见：[获取方法](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#2-3-apm%E3%83%89%E3%83%A1%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90)
+2、Authorization是由 dataKey + 私钥的格式组成。
+3、endpoint和私钥地址获取详见：[获取方法](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#2-3-apm%E3%83%89%E3%83%A1%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90)
 </div>
-
 
 安装命令：
 
@@ -181,12 +180,8 @@ otel-collector-opentelemetry-collector-agent-zthfv                1/1     Runnin
 
 登录OCI Monitoring的Metrics Explorer服务查看pod metrics信息
 
-![alt text](image-7.png)
-
-
-
-
-![%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image1.png](%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image1.png)
+![alt text](image-10.png)
+![alt text](image-12.png)
 
 
 
@@ -253,37 +248,32 @@ golang-demo-lb LoadBalancer 10.96.24.160 150.230.161.35   80:32344/TCP   10m
 ![%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image3.png](%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image3.png)
 
 多刷新几次去OCI的APM中查看traces信息
-![alt text](image.png)
+![alt text](image-13.png)
+![alt text](image-14.png)
 
-![%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image4.png](%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image4.png)
-
-![%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image5.png](%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image5.png)
-
+![alt text](image-15.png)
 ***集中观测***：
 
 目前metrics和traces数据分别在Monitoring和APM两个服务中查看，为了方便统一监控，可以在APM的Dashboards中自定义监控大盘数据。
 如下图所示，选择Create Dashboard，选择Widgets并新增
+![alt text](image-16.png)
 
-![](image-1.png)
-
-![](image-2.png)
 
 点击"+"，添加数据，并在Namespace中选择oracle-apm-monitoring
+![alt text](image-17.png)
+![alt text](image-18.png)
 
-![alt text](image-3.png)
-
-
-![alt text](image-4.png)
+![alt text](image-19.png)
 将左侧所需要的metrics拖动到右侧的"Y axis"，点击Apply
 
-![alt text](image-5.png)
 
+![alt text](image-20.png)
 
 添加traces数据可重复上述步骤，并在APM Widgets中选择对应的选项，如下图所示
-![alt text](image-8.png)
-可以在同一个界面显示metrics和traces数据
 
-![alt text](image-6.png)
+可以在同一个界面显示metrics和traces数据
+![alt text](image-21.png)
+![alt text](image-22.png)
 
 
 
