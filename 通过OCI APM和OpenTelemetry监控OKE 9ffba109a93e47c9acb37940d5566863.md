@@ -280,6 +280,7 @@ golang-demo-lb LoadBalancer 10.96.24.160 150.230.161.35   80:32344/TCP   10m
 ![%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image3.png](%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image3.png)
 
 在OCI控制台的APM中查看traces信息
+
 ![alt text](image-13.png)
 ![alt text](image-14.png)
 
