@@ -35,7 +35,7 @@ NAME        STATUS     ROLES   AGE     VERSION
 ```
 ## **1.3 Helm安装**
 
-我们需要通过helm来安装OpenTelemetry（[helm安装地址](https://helm.sh/docs/intro/install/)），以Oracle-Linux 8-AMD为例
+我们需要通过helm来安装OpenTelemetry（[helm安装地址](https://helm.sh/docs/intro/install/)），以Oracle-Linux 8-AMD为例。
 
 ```shell
 [root@instance-20231020-1341 opc]# wget https://get.helm.sh/helm-v3.14.3-linux-amd64.tar.gz
@@ -78,17 +78,17 @@ helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm
 
 ## **1.4 OpenTelemetry安装部署**
 
-OpenTelemetry包含2个很重要的Collector，Daemonset Collector和Deployment Collector
+OpenTelemetry包含2个很重要的Collector，Daemonset Collector和Deployment Collector。
 
 以下介绍他们的作用及安装。
 
 ### **1.4.1 Daemonset Collector安装**
 
-它是一个以daemonset形式运行的collector，收集OKE集群内每一个节点上的信息，
+它是一个以daemonset形式运行的collector，收集OKE集群每个节点的信息，
 
 它主要包括以下几个组件：
 
-- [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver):收集应用的 traces, metrics and logs.
+- [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver):收集应用的 traces, metrics and logs。
 - [Kubernetes Attributes Processor](https://opentelemetry.io/docs/kubernetes/collector/components/#kubernetes-attributes-processor):将Kubernetes 元数据添加到传入的application telemetry。
 - [Kubeletstats Receiver](https://opentelemetry.io/docs/kubernetes/collector/components/#kubeletstats-receiver): to pull node, pod, and container metrics from the API server on a kubelet。
 - [Filelog Receiver](https://opentelemetry.io/docs/kubernetes/collector/components/#filelog-receiver): 收集写入stdout/stderr的Kubernetes日志和应用程序日志。
@@ -209,7 +209,7 @@ otel-collector-opentelemetry-collector-agent-zthfv                1/1     Runnin
 ```
 可以看到2个pod已经正常运行。这时metrics数据已经开始正常的上传到OC Monitoring中
 
-登录OCI Monitoring的Metrics Explorer服务查看pod metrics信息
+登录OCI Monitoring的Metrics Explorer服务查看metrics信息
 
 ![alt text](image-10.png)
 ![alt text](image-12.png)
@@ -274,22 +274,24 @@ golang-demo-lb LoadBalancer 10.96.24.160 150.230.161.35   80:32344/TCP   10m
 
 ```
 
-在浏览器中输入http://150.230.161.35，进行测试
+在浏览器中输入http://150.230.161.35
+多次刷新页面，进行测试。
 
 ![%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image3.png](%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image3.png)
 
-多刷新几次去OCI的APM中查看traces信息
+在OCI控制台的APM中查看traces信息
 ![alt text](image-13.png)
 ![alt text](image-14.png)
 
 ![alt text](image-15.png)
+
 ***集中观测***：
 
 目前metrics和traces数据分别在Monitoring和APM两个服务中查看，为了方便统一监控，可以在APM的Dashboards中自定义监控大盘数据。
-如下图所示，选择Create Dashboard.
+如下图所示，选择Create Dashboard。
 
 ![alt text](image-16.png)
-选择Widgets并新增.
+选择Widgets并新增。
 
 ![alt text](image-17.png)
 点击"+"，添加数据，并在Namespace中选择oracle-apm-monitoring。
@@ -297,12 +299,12 @@ golang-demo-lb LoadBalancer 10.96.24.160 150.230.161.35   80:32344/TCP   10m
 ![alt text](image-18.png)
 
 ![alt text](image-19.png)
-将左侧所需要的metrics拖动到右侧的"Y axis"，点击Apply
+将左侧所需要的metrics拖动到右侧的"Y axis"，点击Apply。
 
 
 ![alt text](image-20.png)
 
-添加traces数据可重复上述步骤，并在APM Widgets中选择对应的选项，如下图所示
+添加traces数据可重复上述步骤，并在APM Widgets中选择对应的选项，如下图所示：
 
 
 ![alt text](image-21.png)
@@ -317,7 +319,7 @@ golang-demo-lb LoadBalancer 10.96.24.160 150.230.161.35   80:32344/TCP   10m
 
 ## **1.6 logs收集**
 
-本文主要讲解metrics和traces的收集，logs收集详见[OCI Logging服务](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#3logging)
+本文主要讲解metrics和traces的收集，logs收集详见[OCI Logging服务](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#3logging)。
 
 ## **总结：**
 
