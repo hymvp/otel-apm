@@ -208,9 +208,9 @@ helm install otel-collector-cluster open-telemetry/opentelemetry-collector --val
 otel-collector-cluster-opentelemetry-collector-6f68f78f9c-2qsjn   1/1     Running   1              2d
 otel-collector-opentelemetry-collector-agent-zthfv                1/1     Running   1              2d1h
 ```
-可以看到2个pod已经正常运行。这时metrics数据已经开始正常的上传到OC Monitoring中
+可以看到2个pod已经正常运行。这时metrics数据已经开始正常的上传到OC Monitoring中。
 
-登录OCI Monitoring的Metrics Explorer服务查看metrics信息
+登录OCI Monitoring的Metrics Explorer服务查看metrics信息。
 
 ![alt text](image-10.png)
 ![alt text](image-12.png)
