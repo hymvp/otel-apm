@@ -35,7 +35,7 @@ NAME        STATUS     ROLES   AGE     VERSION
 ```
 ## **1.3 Helm安装**
 
-我们需要通过helm来安装OpenTelemetry（[helm安装地址](https://helm.sh/docs/intro/install/)），以Oracle-Linux 8-AMD为例。
+我们需要通过helm（[helm安装地址](https://helm.sh/docs/intro/install/)）来安装OpenTelemetry，以Oracle-Linux 8-AMD为例。
 
 ```shell
 [root@instance-20231020-1341 opc]# wget https://get.helm.sh/helm-v3.14.3-linux-amd64.tar.gz
