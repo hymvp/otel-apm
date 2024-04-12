@@ -1,26 +1,28 @@
-# 2.7 通过OCI APM和OpenTelemetry监控OKE (option)
+#  通过OCI APM和Logging Analytics监控OKE中的Java微服务
 
 
 
 ## **前言**
 
-OpenTelemetry 简称为OTel，是一个供应商中立的开源可观测性框架，用于检测、生成、收集和导出遥测数据，例如metrics、traces和logs。本文主要介绍在OKE集群中部署一个Go Demo，并通过OCI的APM和OpenTelemetry对OKE、Go Demo应用进行metrics和traces的收集、展示。
+本场景介绍如何将集成了Open Telemetry的JAVA微服务部署到OKE环境中，并且通过OCI的APM和Logging Analytics收集OKE集群的traces和logs。最后使用Drilldowns关联APM和Logging analytics。
 
 ## **部署流程**
 
 - **APM环境准备**
 - **OKE集群部署**
-- **Helm工具安装**
-- **Open Telemetry部署**
-- **Go Demo部署到OKE**
-- **Logs收集简介**
-- **总结**
+- **JAVA微服务部署**
+- **Logging Analytics收集OKE日志**
+- **使用Drilldowns关联APM和Logging Analytics**
+  
 
-## **1.1 APM部署**
+## **APM环境准备**
 
 首先我们要在OCI控制台中部署一套APM，部署步骤详见[APM部署](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#2-3-apm%E3%83%89%E3%83%A1%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90)。
+记录其endpoint和datakey，如下图所示：
+![alt text](image-1.png)
+![alt text](image.png)
 
-## **1.2 OKE部署**
+## **OKE集群部署**
 
 其次部署一套OKE集群([OKE部署](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#1-1-oci%E3%83%80%E3%83%83%E3%82%B7%E3%83%A5%E3%83%9C%E3%83%BC%E3%83%89%E3%81%8B%E3%82%89oke%E3%82%AF%E3%83%A9%E3%82%B9%E3%82%BF%E3%81%AE%E6%A7%8B%E7%AF%89))，输入如下命令能正确显示执行结果即可。
 
@@ -33,301 +35,175 @@ NAME        STATUS     ROLES   AGE     VERSION
 
 
 ```
-## **1.3 Helm安装**
+## **JAVA微服务部署**
 
-我们需要通过helm（[helm安装地址](https://helm.sh/docs/intro/install/)）来安装OpenTelemetry，以Oracle-Linux 8-AMD为例。
-helm安装过程如下：
+本次部署示例地址：https://github.com/oracle-japan/code-at-customer-handson-otelVer/tree/main/ 下载到本地。
 
-```shell
-[root@instance-20231020-1341 opc]# wget https://get.helm.sh/helm-v3.14.3-linux-amd64.tar.gz
---2024-03-20 06:50:48--  https://get.helm.sh/helm-v3.14.3-linux-amd64.tar.gz
-Resolving get.helm.sh (get.helm.sh)... 152.195.19.97, 2606:2800:11f:1cb7:261b:1f9c:2074:3c
-Connecting to get.helm.sh (get.helm.sh)|152.195.19.97|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 16134525 (15M) [application/x-tar]
-Saving to: ‘helm-v3.14.3-linux-amd64.tar.gz’
 
-helm-v3.14.3-linux-amd64.tar.gz            100%[=======================================================================================>]  15.39M  80.8MB/s    in 0.2s    
-
-2024-03-20 06:50:48 (80.8 MB/s) - ‘helm-v3.14.3-linux-amd64.tar.gz’ saved [16134525/16134525]
-
-[root@instance-20231020-1341 opc]# tar -zxvf helm-v3.14.3-linux-amd64.tar.gz 
-linux-amd64/
-linux-amd64/LICENSE
-linux-amd64/README.md
-linux-amd64/helm
-[root@instance-20231020-1341 opc]# mv linux-amd64/helm /usr/bin
-[root@instance-20231020-1341 opc]# helm
-The Kubernetes package manager
-
-Common actions for Helm:
-
-- helm search:    search for charts
-- helm pull:      download a chart to your local directory to view
-- helm install:   upload the chart to Kubernetes
-- helm list:      list releases of charts
-
-```
-
-如果您已经安装了 Helm，请添加 OpenTelemetry Collector Helm charts，以便稍后使用。
 
 
 ```shell
-helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+[root@instance-20230927-1427-tf tmp]# git clone https://github.com/oracle-japan/code-at-customer-handson-otelVer.git
+Cloning into 'code-at-customer-handson-otelVer'...
+remote: Enumerating objects: 7911, done.
+remote: Counting objects: 100% (5416/5416), done.
+remote: Compressing objects: 100% (3064/3064), done.
+remote: Total 7911 (delta 2051), reused 5387 (delta 2047), pack-reused 2495
+Receiving objects: 100% (7911/7911), 81.83 MiB | 52.57 MiB/s, done.
+Resolving deltas: 100% (3261/3261), done.
 
 ```
 
-## **1.4 OpenTelemetry安装部署**
+部署应用前需要创建一个apm-secret，供k8s 部署文件引用。命令如下：
 
-OpenTelemetry包含2个很重要的Collector，Daemonset Collector和Deployment Collector。
+```shell
+[root@instance-20230927-1427-tf k8s]# kubectl create secret generic apm-secret --from-literal=traces-endpoint="https://aaaaddsb2mzmgaaaaaaaaac4i4.apm-agt.us-ashburn-1.oci.oraclecloud.com/20200101/opentelemetry/private/v1/traces/" --from-literal=metrics-endpoint="https://aaaaddsb2mzmgaaaaaaaaac4i4.apm-agt.us-ashburn-1.oci.oraclecloud.com/20200101/opentelemetry/v1/metrics" --from-literal=private-key-header="authorization=dataKey C4FA2HRQLWZXMIF3JP2AGXKRRB7ZCTSF"
+secret/apm-secret created
 
-以下介绍他们的作用及安装。
-
-### **1.4.1 Daemonset Collector安装**
-
-它是一个以daemonset形式运行的collector，收集OKE集群每个节点的信息，
-
-它主要包括以下几个组件：
-
-- [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver):收集应用的 traces, metrics and logs。
-- [Kubernetes Attributes Processor](https://opentelemetry.io/docs/kubernetes/collector/components/#kubernetes-attributes-processor):将Kubernetes 元数据添加到传入的application telemetry。
-- [Kubeletstats Receiver](https://opentelemetry.io/docs/kubernetes/collector/components/#kubeletstats-receiver): to pull node, pod, and container metrics from the API server on a kubelet。
-- [Filelog Receiver](https://opentelemetry.io/docs/kubernetes/collector/components/#filelog-receiver): 收集写入stdout/stderr的Kubernetes日志和应用程序日志。
-
-安装需要一个values.yaml文件，如下所示：
-
-```YAML
-mode: daemonset
-  
-presets:
-  # enables the k8sattributesprocessor and adds it to the traces, metrics, and logs pipelines
-  kubernetesAttributes:
-    enabled: true
-  # enables the kubeletstatsreceiver and adds it to the metrics pipelines
-  kubeletMetrics:
-    enabled: true
-
-
-config:
-  exporters:
-    otlphttp:
-      endpoint: "https://aaaaddsb2mzmgaaaaaaaaac4i4.apm-agt.us-ashburn-1.oci.oraclecloud.com/20200101/opentelemetry"
-      headers:
-        Authorization: "dataKey C4FA2HRQLWZXMIF3JP2AGXKRRB7ZCTSF"
-  service:
-    pipelines:
-      metrics:
-        exporters: [ otlphttp ]
-      traces:
-        exporters: [ otlphttp ]
-
-
-```
-
-
-<div style="background-color: #ADD8E6; padding: 10px;">
-1、配置文件中的endpoint地址和Authorization中的私钥替换成客户真实的信息。
-
-2、Authorization是由 dataKey + 私钥的格式组成。
-3、endpoint和私钥地址获取详见：[获取方法](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#2-3-apm%E3%83%89%E3%83%A1%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90)
-</div>
-
-安装命令：
-
-```YAML
-
-helm install otel-collector open-telemetry/opentelemetry-collector --values values.yaml
-
-```
-
-
-<div style="background-color: #ADD8E6; padding: 10px;">
-注意values.yaml文件的路径改为真实路径
-</div>
-
-
-### **1.4.2 Deployment Collector 安装**
-
-该collector是以deployment的形式部署，主要收集整个集群的telemetry，该collector主要包含一下组件：
-
-- [Kubernetes Cluster Receiver](https://opentelemetry.io/docs/kubernetes/collector/components/#kubernetes-cluster-receiver): 收集整个集群的metrics和entity events.
-- [Kubernetes Objects Receiver](https://opentelemetry.io/docs/kubernetes/collector/components/#kubernetes-objects-receiver): 从Kubernetes API server收集objects。
-
-安装同样需要一个values-cluster.yaml（名称是为了和上面的values.yaml区分），如下所示：
-
-```YAML
-mode: deployment
-  
-# We only want one of these collectors - any more and we'd produce duplicate data
-replicaCount: 1
-
-presets:
-  # enables the k8sclusterreceiver and adds it to the metrics pipelines
-  clusterMetrics:
-    enabled: true
-  # enables the k8sobjectsreceiver to collect events only and adds it to the logs pipelines
-  kubernetesEvents:
-    enabled: true
-## The chart only includes the loggingexporter by default
-## If you want to send your data somewhere you need to
-## configure an exporter, such as the otlpexporter
-config:
-  exporters:
-   otlphttp:
-     endpoint: "https://aaaaddsb2mzmgaaaaaaaaac4i4.apm-agt.us-ashburn-1.oci.oraclecloud.com/20200101/opentelemetry"
-     headers:
-        Authorization: "dataKey C4FA2HRQLWZXMIF3JP2AGXKRRB7ZCTSF"
-  service:
-    pipelines:
-      metrics:
-        exporters: [ otlphttp ]
-      traces:
-        exporters: [ otlphttp ]
+[root@instance-20230927-1427-tf k8s]# kubectl get secret
+NAME                                           TYPE                 DATA   AGE
+apm-secret                                     Opaque               3      11s
+db-secret                                      Opaque               3      27d
+sh.helm.release.v1.otel-collector-cluster.v1   helm.sh/release.v1   1      19h
+sh.helm.release.v1.otel-collector.v1           helm.sh/release.v1   1      19h
 
 ```
 
 <div style="background-color: #ADD8E6; padding: 10px;">
-1、配置文件中的endpoint地址和Authorization中的私钥替换成客户真实的信息。
+注意：
 
-2、Authorization是由 dataKey + 私钥的格式组成。
-3、endpoint和私钥地址获取详见：[获取方法](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#2-3-apm%E3%83%89%E3%83%A1%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90)
+1、上面的endpoint地址需要加上/20200101/opentelemetry/private/v1/traces/、/20200101/opentelemetry/v1/metrics" 后缀。
+
+2、private-key-header中的key为private_datakey
 </div>
 
-安装命令：
+应用部署，进入目录：/code-at-customer-handson-otelVer/k8s，部署backend、frontend、datasource
 
 ```YAML
-
-helm install otel-collector-cluster open-telemetry/opentelemetry-collector --values values-cluster.yaml
+[root@instance-20230927-1427-tf k8s]# kubectl apply -f olympic_backend.yaml
+deployment.apps/backend-app-v1 created
+deployment.apps/backend-app-v2 created
+deployment.apps/backend-app-v3 created
+service/backend-app created
+[root@instance-20230927-1427-tf k8s]# kubectl apply -f olympic_frontend.yaml 
+deployment.apps/frontend-app created
+service/frontend-app created
+[root@instance-20230927-1427-tf k8s]# kubectl apply -f olympic_datasource.yaml 
+deployment.apps/datasource-app created
+service/datasource-app created
 
 ```
 
-检查结果：
+等待片刻获取Service EXTERNAL-IP 的地址
 
 ```YAML
-[root@instance-20230927-1427-tf opentelemetry]# kubectl get pod|grep otel
-otel-collector-cluster-opentelemetry-collector-6f68f78f9c-2qsjn   1/1     Running   1              2d
-otel-collector-opentelemetry-collector-agent-zthfv                1/1     Running   1              2d1h
-```
-可以看到2个pod已经正常运行。这时metrics数据已经开始正常的上传到OC Monitoring中。
-
-登录OCI Monitoring的Metrics Explorer服务查看metrics信息。
-
-![alt text](image-10.png)
-![alt text](image-12.png)
-
-
-
-<div style="background-color: #ADD8E6; padding: 10px;">
-注意：选择正确的compartment及其他选项，namespace请选择oracle-apm-monitoring
-</div>
-
-
-至此metrics的配置、收集已完毕，下面我们部署一个Go语言Demo到OKE中。
-
-## **1.5 GO DEMO部署**
-
-以https://github.com/oracle-japan/ochacafe-faststart-go
-为例，部署到OKE中。此代码已进行了改造，将跟踪数据导出到了OCI的API端点。
-
-![%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image2.png](%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image2.png)
-
-首先配置 **PostgreSQL，参考：[PG配置](https://qiita.com/yama6/items/ec8cd7652a1c0cf9e13d#3-oci-database-with-postgresql%E3%81%AE%E4%BD%9C%E6%88%90)**，**记录其中的endpoint、username、password**
-
-等待部署完毕后登录PG库,登录pg命令：
-```YAML
-psql -h <endpoint> -U <usename> -d postgres
-```
-创建demo数据库：
-```YAML
-postgres=> create database demo;
-```
-
-数据库创建完毕后使用kubectl命令分别创建db secret 和apm secret，供k8s 部署文件引用。
-
-```YAML
-
-kubectl create secret generic db-secret --from-literal=username=admin --from-literal=password=Kubectl0319@ --from-literal=host=10.0.1.28
-
-```
-username、password 为pg的用户名和密码，host为pg的ip地址
-
-```YAML
-kubectl create secret generic apm-secret --from-literal=endpoint=https://aaaaddsb2mzmgaaaaaaaaac4i4.apm-agt.us-ashburn-1.oci.oraclecloud.com --from-literal=key=C4FA2HRQLWZXMIF3JP2AGXKRRB7ZCTSF
-
-```
-endpoint、key为APM的endpoint和私钥
-
-应用部署，使用上述go demo中的app.yaml进行部署https://github.com/oracle-japan/ochacafe-faststart-go/blob/main/k8s/app.yaml
-
-```YAML
-kubectl apply -f app.yaml
-```
-
-等待片刻获取Service EXTERNAL-IP 的ip地址
-
-```YAML
-
-[root@instance-20230927-1427-tf opentelemetry]# kubectl get svc golang-demo-lb
-
-NAME            TYPE         CLUSTER-IP     EXTERNAL-IP     PORT(S)     AGE
-
-golang-demo-lb LoadBalancer 10.96.24.160 150.230.161.35   80:32344/TCP   10m
+[root@instance-20230927-1427-tf k8s]# k get svc frontend-app
+NAME           TYPE           CLUSTER-IP    EXTERNAL-IP     PORT(S)        AGE
+frontend-app   LoadBalancer   10.96.6.146   129.213.197.0   80:30287/TCP   104s
 
 ```
 
-在浏览器中输入http://150.230.161.35
-多次刷新页面，进行测试。
+在浏览器中输入http://129.213.197.0，多次刷新页面，进行测试。
+![alt text](image-2.png)
 
-![%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image3.png](%E9%80%9A%E8%BF%87OCI%20APM%E5%92%8COpenTelemetry%E7%9B%91%E6%8E%A7OKE%209ffba109a93e47c9acb37940d5566863/image3.png)
 
 在OCI控制台的APM中查看traces信息。
+![alt text](image-3.png)
+![alt text](image-4.png)
+![alt text](image-5.png)
+
+如上图所示，可以正常显示访问的整体traces路径
+
+
+## **Logging Analytics收集OKE日志**
+接下来部署Logging Analytics收集OKE集群中的日志。
+
+![alt text](image-6.png)
+
+如下图所示进入对应菜单。
+
+![alt text](image-7.png)
+![alt text](image-8.png)
+![alt text](image-9.png)
+
+选择所需的OKE集群
+
+![alt text](image-10.png)
+![alt text](image-11.png)
+
+选择Configure
+
+<div style="background-color: #ADD8E6; padding: 10px;">
+注意：
+本次操作会自动增加dynamic group and policies，其中有一条policies"Allow dynamic-group <dynamic_group_name> to {LOG_ANALYTICS_DISCOVERY_UPLOAD} in tenancy"，需要具有管理员权限,否则操作会失败。</div>
+
+![alt text](image-12.png)
+
+等待部署完毕，跳转到状态查询
 
 ![alt text](image-13.png)
 
-选择对应的APM应用和时间段。
+等待5分钟，状态按钮变成绿色
 
 ![alt text](image-14.png)
 
-选择对应的记录可以查看服务详情。
+验证日志收集是否正常。
 
 ![alt text](image-15.png)
 
-***集中观测***：
-
-目前metrics和traces数据分别在Monitoring和APM两个服务中查看，为了方便统一监控，可以在APM的Dashboards中自定义监控大盘数据。
-如下图所示，选择Create Dashboard。
+选择右侧过滤pod日志
 
 ![alt text](image-16.png)
-选择Widgets并新增。
+
+可以看到OKE的日志已经被收集到Logging Analytics中
 
 ![alt text](image-17.png)
-点击"+"，添加数据，并在Namespace中选择oracle-apm-monitoring。
 
-![alt text](image-18.png)
+## **使用Drilldowns关联APM和Logging Analytics**
+OpenTelemetry 在日志中记录了traceid和spanid，这允许直接关联对应请求的traces和logs。OCI APM提供了一种简单的方法，使用Drilldowns配置，只需单击一下即可从traces导航到 OCI Logging Analytics中的日志。
 
-![alt text](image-19.png)
-将左侧所需要的metrics拖动到右侧的"Y axis"，点击Apply。
-
-
-![alt text](image-20.png)
-
-添加traces数据可重复上述步骤，并在APM Widgets中选择对应的选项，如下图所示：
-
-
-![alt text](image-21.png)
-
-这样就可以在同一个界面显示metrics和traces数据了。
-如下图所示，在这里我们可以看到container的metrics，
-也可以看到应用的tracers信息
+在Logging Analytics中输入：traceId，点击运行。
 
 ![alt text](image-22.png)
 
+复制任意一条记录，如下图格式所示
+
+![alt text](image-23.png)
+
+粘贴复制内容到搜索框，先点击运行，然后在点击复制URL
+
+![alt text](image-24.png)
 
 
-## **1.6 Logs收集**
+URL的格式如下：
+https://cloud.oracle.com/loganalytics/explorer?viz=records_histogram&encodedQuery=dHJhY2VJZDogYW5kIGE3YzU0Y2ZkMmM0YzRlNmE1NmMzZDE5MTBjYWJjZjIxIHwgdGltZXN0YXRzIGNvdW50IGFzIGxvZ3JlY29yZHMgYnkgJ0xvZyBTb3VyY2Un&vizOptions=%7B%22customVizOpt%22%3A%7B%22primaryFieldIname%22%3A%22mbody%22%2C%22primaryFieldDname%22%3A%22Original%20Log%20Content%22%7D%7D&scopeFilters=lg%3Aocid1.compartment.oc1..aaaaaaaaptdr4gr5mfj72ywuwpegdykybsit2vrk4tkgfuye7rhk7y7efrjq%2Ctrue%3Brs%3Aocid1.compartment.oc1..aaaaaaaaptdr4gr5mfj72ywuwpegdykybsit2vrk4tkgfuye7rhk7y7efrjq%2Ctrue%3Brg%3Aus-ashburn-1&timeNum=60&timeUnit=MINUTES&region=us-ashburn-1&tenant=sehubjapacprod
 
-本文主要讲解metrics和traces的收集，logs收集详见[OCI Logging服务](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#3logging)。
+URL需要做一定的修改：其中的encodedQuery=******************修改为search=traceId: and <traceid>
 
-## **总结：**
+新URL如下，将其复制到APM Drilldowns的配置中：
 
-以上就是通过OCI的APM和开源的Opentelemetry对OKE集群进行统一监控的部署全过程。OCI APM提供完整的应用链路监控，并且提供多种监控大盘模板，极大的帮助客户减少故障诊断时间，更多内容请大家自行体验，谢谢。
+https://cloud.oracle.com/loganalytics/explorer?viz=records_histogram&search=traceId: and <traceid>&vizOptions=%7B%22customVizOpt%22%3A%7B%22primaryFieldIname%22%3A%22mbody%22%2C%22primaryFieldDname%22%3A%22Original%20Log%20Content%22%7D%7D&scopeFilters=lg%3Aocid1.compartment.oc1..aaaaaaaaptdr4gr5mfj72ywuwpegdykybsit2vrk4tkgfuye7rhk7y7efrjq%2Ctrue%3Brs%3Aocid1.compartment.oc1..aaaaaaaaptdr4gr5mfj72ywuwpegdykybsit2vrk4tkgfuye7rhk7y7efrjq%2Ctrue%3Brg%3Aus-ashburn-1&timeNum=60&timeUnit=MINUTES&region=us-ashburn-1&tenant=sehubjapacprod
+
+
+
+导航到APM中，选择一条有效的traces记录，点击ドリルダウンの管理
+
+![alt text](image-20.png)
+
+![alt text](image-25.png)
+
+粘贴上述的URL到对话框中，注意红框标注的修改部分
+
+![alt text](image-26.png)
+
+配置完毕后，我们在APM中选择一条新的trace记录
+
+
+![alt text](image-27.png)
+
+![alt text](image-28.png)
+
+会携带新的traceid到Logging Analytics中（traceid:06637fc3d1a031c628c682450edd7501）
+![alt text](image-29.png)
+
+以上就是整体安装步骤。
