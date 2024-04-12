@@ -4,7 +4,7 @@
 
 ## **前言**
 
-本场景介绍如何将集成了Open Telemetry的JAVA微服务部署到OKE环境中，并且通过OCI的APM和Logging Analytics收集OKE集群的traces和logs。最后使用Drilldowns关联APM和Logging analytics。
+本场景介绍如何将集成了Open Telemetry的JAVA微服务部署到OKE环境中，并且通过OCI的APM和Logging Analytics收集OKE集群的traces和logs。最后使用Drilldowns关联APM和Logging Analytics。
 
 ## **部署流程**
 
@@ -103,7 +103,7 @@ frontend-app   LoadBalancer   10.96.6.146   129.213.197.0   80:30287/TCP   104s
 
 ```
 
-在浏览器中输入http://129.213.197.0，多次刷新页面，进行测试。
+在浏览器中输入http://129.213.197.0/ ,多次刷新页面，进行测试。
 ![alt text](image-2.png)
 
 
