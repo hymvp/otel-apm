@@ -17,14 +17,14 @@
 
 ## **APM环境准备**
 
-首先我们要在OCI控制台中部署一套APM，部署步骤详见[APM部署](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#2-3-apm%E3%83%89%E3%83%A1%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90)。
+首先我们要在OCI控制台中部署一套APM，部署步骤详见[APM部署](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#2-3-apm%E3%83%89%E3%83%A1%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%9C%E6%88%90)。（2-3 APMドメインの）
 记录其endpoint和datakey，如下图所示：
 ![alt text](image-1.png)
 ![alt text](image.png)
 
 ## **OKE集群部署**
 
-其次部署一套OKE集群([OKE部署](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#1-1-oci%E3%83%80%E3%83%83%E3%82%B7%E3%83%A5%E3%83%9C%E3%83%BC%E3%83%89%E3%81%8B%E3%82%89oke%E3%82%AF%E3%83%A9%E3%82%B9%E3%82%BF%E3%81%AE%E6%A7%8B%E7%AF%89))，输入如下命令能正确显示执行结果即可。
+其次部署一套OKE集群([OKE部署](https://oracle-japan.github.io/ocitutorials/cloud-native/oke-observability-for-advances/#1-1-oci%E3%83%80%E3%83%83%E3%82%B7%E3%83%A5%E3%83%9C%E3%83%BC%E3%83%89%E3%81%8B%E3%82%89oke%E3%82%AF%E3%83%A9%E3%82%B9%E3%82%BF%E3%81%AE%E6%A7%8B%E7%AF%89))，（1-1 OCIダッシュボードからOKEクラスタの構築）输入如下命令能正确显示执行结果即可。
 
 ```yaml
 
@@ -54,10 +54,11 @@ Resolving deltas: 100% (3261/3261), done.
 
 ```
 
-部署应用前需要创建一个apm-secret，供k8s 部署文件引用。命令如下：
+部署应用前需要创建一个apm-secret，供k8s 部署文件引用。（apm endpoint地址参考 **APM环境准备** 章节）
+命令如下：
 
 ```shell
-[root@instance-20230927-1427-tf k8s]# kubectl create secret generic apm-secret --from-literal=traces-endpoint="https://aaaaddsb2mzmgaaaaaaaaac4i4.apm-agt.us-ashburn-1.oci.oraclecloud.com/20200101/opentelemetry/private/v1/traces/" --from-literal=metrics-endpoint="https://aaaaddsb2mzmgaaaaaaaaac4i4.apm-agt.us-ashburn-1.oci.oraclecloud.com/20200101/opentelemetry/v1/metrics" --from-literal=private-key-header="authorization=dataKey C4FA2HRQLWZXMIF3JP2AGXKRRB7ZCTSF"
+[root@instance-20230927-1427-tf k8s]# kubectl create secret generic apm-secret --from-literal=traces-endpoint="https://<apm endpoint>/20200101/opentelemetry/private/v1/traces/" --from-literal=metrics-endpoint="https://<apm endpoint>/20200101/opentelemetry/v1/metrics" --from-literal=private-key-header="authorization=dataKey C4FA2HRQLWZXMIF3JP2AGXKRRB7ZCTSF"
 secret/apm-secret created
 
 [root@instance-20230927-1427-tf k8s]# kubectl get secret
